@@ -1,7 +1,13 @@
+using Busniss;
+using Core.Contracts.Validators;
+using Core.Interfaces;
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using Mapster;
+using MapsterMapper;
 using Scalar.AspNetCore;
-using SurvayBasket.Api.Interfaces;
 using SurvayBasket.Api.MiddleWars;
-using SurvayBasket.Api.Services;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +20,19 @@ builder.Services.AddOpenApi();
 //builder.Services.AddKeyedScoped<IOS, Mac>("mac");
 //builder.Services.AddKeyedScoped<IOS, Windos>("windos");
 //builder.Services.AddTransient<CustomMiddleware>();
+
+builder.Services.AddScoped<IPollService, PollServices>();
+//builder.Services.AddMapster();
+var mapsterConf = new TypeAdapterConfig();
+mapsterConf.Scan(Assembly.GetExecutingAssembly());
+builder.Services.AddSingleton<IMapper>(new Mapper(mapsterConf));
+
+//  add fluent validation
+// old approach
+//builder.Services.AddScoped<IValidator<CreatePoll>, CreatePollValidator>();
+builder.Services
+    .AddFluentValidationAutoValidation()
+    .AddValidatorsFromAssemblies(new[] { Assembly.GetAssembly(typeof(Core.Contracts.Validators.CreatePollValidator)) });
 
 var app = builder.Build();
 
