@@ -1,54 +1,29 @@
-using Busniss;
-using Core.Contracts.Validators;
-using Core.Interfaces;
-using FluentValidation;
-using FluentValidation.AspNetCore;
-using Mapster;
-using MapsterMapper;
-using Scalar.AspNetCore;
-using SurvayBasket.Api.MiddleWars;
-using System.Reflection;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+// Register the AppDbContext with the dependency injection container
+builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-//builder.Services.AddKeyedScoped<IOS, Mac>("mac");
-//builder.Services.AddKeyedScoped<IOS, Windos>("windos");
-//builder.Services.AddTransient<CustomMiddleware>();
 
-builder.Services.AddScoped<IPollService, PollServices>();
-//builder.Services.AddMapster();
-var mapsterConf = new TypeAdapterConfig();
-mapsterConf.Scan(Assembly.GetExecutingAssembly());
-builder.Services.AddSingleton<IMapper>(new Mapper(mapsterConf));
 
-//  add fluent validation
-// old approach
-//builder.Services.AddScoped<IValidator<CreatePoll>, CreatePollValidator>();
-builder.Services
-    .AddFluentValidationAutoValidation()
-    .AddValidatorsFromAssemblies(new[] { Assembly.GetAssembly(typeof(Core.Contracts.Validators.CreatePollValidator)) });
-
+builder.Services.IOCServices(builder.Configuration);
 var app = builder.Build();
 
 #region middleware
 //var logger = app.Services.GetRequiredService<ILogger<Program>>();
-//app.Use(async (context, next) =>
+//app.Use(async (context, next) => 
 //{
 //    logger.LogInformation("Request received");
 //    await next();
 //    logger.LogInformation("Response sent");
-
 //});
 //app.UseMiddleware<CustomMiddleware>();
 //app.UseCustomMiddleware();
 // Configure the HTTP request pipeline. 
 #endregion
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -56,9 +31,27 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseRouting();
 
+app.UseAuthentication(); // Required for authentication
 app.UseAuthorization();
+//app.MapIdentityApi<ApplicationUser>();
+app.Use(async (context, next) =>
+{
 
+    var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+    var user = context.User.Identity;
+    if (user == null || !user.IsAuthenticated)
+    {
+        logger.LogWarning("User is NOT authenticated in the pipeline.");
+    }
+    else
+    {
+        logger.LogInformation("User authenticated: {Name}", user.Name ?? "Anonymous");
+    }
+    await next();
+});
 app.MapControllers();
 
 app.Run();
+

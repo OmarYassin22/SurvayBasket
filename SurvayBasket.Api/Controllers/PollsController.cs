@@ -1,71 +1,65 @@
-﻿
-
-using Core.Contracts.Response;
-using FluentValidation;
-using Mapster;
-using MapsterMapper;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-
+﻿using Core.Contracts.Poll;
+using Microsoft.AspNetCore.Authorization;
 namespace SurvayBasket.Api.Controllers;
-[Route("api/[controller]")]
+
+[Authorize]
 [ApiController]
+[Route("api/[controller]")]
 public class PollsController(IPollService pollService, IMapper mapper) : ControllerBase
 {
     private readonly IPollService _pollService = pollService;
     private readonly IMapper _mapper = mapper;
 
     [HttpGet]
-    public IActionResult GetAll()
+    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
-        var polls = _pollService.GetPolls();
-        return Ok(polls as ResponsePoll);
+        var polls = await _pollService.GetPollsAsync(cancellationToken);
+        var responsePoll = polls.Adapt<ResponsePoll>();
+
+        return Ok(polls);
     }
     [HttpGet("{id}")]
-    public IActionResult Get(int id)
+    public async Task<IActionResult> Get(int id, CancellationToken cancellationToken)
     {
-        var poll = _pollService.GetPollById(id);
+        var poll = await _pollService.GetPollByIdAsync(id, cancellationToken);
         if (poll == null)
         {
             return NotFound();
         }
         var conf = new TypeAdapterConfig();
         conf.NewConfig<Poll, ResponsePoll>()
-            .Map(dist => dist.Notes, src => src.Description);
+            .Map(dist => dist.Notes, src => src.Summery);
         var res = poll.Adapt<ResponsePoll>(conf);
         return Ok(res);
 
 
     }
     [HttpPost()]
-    public IActionResult CreatePol(CreatePoll request, [FromServices] IValidator<CreatePoll> validator)
+    public async Task<IActionResult> CreatePol(CreatePollRequest request, [FromServices] IValidator<CreatePollRequest> validator, CancellationToken cancellationToken)
     {
-        //var validationResult = validator.Validate(request);
-        //if (!validationResult.IsValid)
-        //{
-        //    var erros = new ModelStateDictionary();
 
-
-        //    validationResult.Errors.ForEach(x => erros.AddModelError(x.ErrorCode, x.ErrorMessage));
-
-        //    return ValidationProblem(erros);
-        //}
-        var poll = _pollService.CreatePool(request.Adapt<Poll>());
+        var poll = await _pollService.CreatePoolAsync(request.Adapt<Poll>(), cancellationToken);
         return CreatedAtAction(nameof(Get), new { id = poll.Id }, poll);
 
     }
     [HttpPut("{id}")]
-    public IActionResult Update(int id, CreatePoll request)
+    public async Task<IActionResult> Update(int id, CreatePollRequest request, CancellationToken cancellationToken)
     {
-        //return _pollService.Update(id, (Poll)request) ? NoContent() : NotFound();
-        return Ok();
+        return await _pollService.UpdateAsync(id, request.Adapt<Poll>(), cancellationToken) ? NoContent() : NotFound();
     }
 
     [HttpDelete("{id}")]
-    public IActionResult Delete(int id)
+    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
-        return _pollService.Delete(id) ? NoContent() : NotFound();
+        return await _pollService.DeleteAsync(id, cancellationToken) ? NoContent() : NotFound();
     }
 
+    [HttpPost("{id}/toggle")]
+    public async Task<IActionResult> TogglePublish(int id, CancellationToken cancellationToken)
+    {
+        var poll = await _pollService.TogglePublishAsync(id, cancellationToken);
+        return poll == null ? NotFound() : Ok(poll);
+    }
     [HttpPost("test")]
     public IActionResult Test([FromBody] Student student)
     {
