@@ -35,7 +35,7 @@ app.UseRouting();
 
 app.UseAuthentication(); // Required for authentication
 app.UseAuthorization();
-//app.MapIdentityApi<ApplicationUser>();
+app.MapIdentityApi<ApplicationUser>();
 app.Use(async (context, next) =>
 {
 
@@ -52,6 +52,8 @@ app.Use(async (context, next) =>
     await next();
 });
 app.MapControllers();
+//app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseExceptionHandler();
 
 app.Run();
 

@@ -1,14 +1,13 @@
-﻿
-using Core.Models;
+﻿using Core.Abestraction;
 
 namespace Core.Interfaces;
 public interface IPollService
 {
 
-    Task<IEnumerable<Poll?>> GetPollsAsync(CancellationToken cancellationToken);
-    Task<Poll?> GetPollByIdAsync(int id, CancellationToken cancellationToken);
-    Task<Poll?> CreatePoolAsync(Poll poll, CancellationToken cancellationToken);
-    Task<bool> UpdateAsync(int id, Poll request, CancellationToken cancellationToken);
-    Task<bool> DeleteAsync(int id, CancellationToken cancellationToken);
-    Task<Poll?> TogglePublishAsync(int id, CancellationToken cancellationToken);
+    Task<Result<IEnumerable<Poll?>>> GetPollsAsync(CancellationToken cancellationToken);
+    Task<Result<Poll>> GetPollByIdAsync(int id, CancellationToken cancellationToken);
+    Task<Result<Poll>> CreatePoolAsync(Poll poll, CancellationToken cancellation);
+    Task<Result> UpdateAsync(int id, Poll request, CancellationToken cancellationToken);
+    Task<Result> DeleteAsync(int id, CancellationToken cancellationToken);
+    Task<Result<Poll>> TogglePublishAsync(int id, CancellationToken cancellationToken);
 }

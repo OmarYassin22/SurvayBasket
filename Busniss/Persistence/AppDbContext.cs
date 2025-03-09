@@ -14,6 +14,15 @@ public class AppDbContext(DbContextOptions options, IHttpContextAccessor httpCon
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+        var cascadeFKs = modelBuilder.Model
+                                    .GetEntityTypes()
+                                    .SelectMany(t => t.GetForeignKeys())
+                                    .Where(fk => fk.DeleteBehavior == DeleteBehavior.Cascade && !fk.IsOwnership);
+        foreach (var fk in cascadeFKs)
+            fk.DeleteBehavior = DeleteBehavior.Restrict;
+
+
+
         base.OnModelCreating(modelBuilder);
     }
 

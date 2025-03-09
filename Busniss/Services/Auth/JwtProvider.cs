@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using SurvayBasket.Api.Options;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -8,10 +10,12 @@ namespace SurveyBasket.Api.Services.Auth;
 public class JwtProvider : IJwtProvider
 {
     private readonly IConfiguration _configuration;
+    private readonly JwtOptions _jwtOptions;
 
-    public JwtProvider(IConfiguration configuration)
+    public JwtProvider(IConfiguration configuration, IOptionsMonitor<JwtOptions> jwtOptions)
     {
         _configuration = configuration;
+        _jwtOptions = jwtOptions.CurrentValue;
     }
 
     public string GenerateToken(ApplicationUser user)
@@ -21,23 +25,59 @@ public class JwtProvider : IJwtProvider
         var claims = new List<Claim>
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email),
+            new Claim(JwtRegisteredClaimNames.Email, user.Email!),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
 
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.Key));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(
-            issuer: jwtSettings["Issuer"],
-            audience: jwtSettings["Audience"],
+            issuer: _jwtOptions.Issuer,
+            audience: _jwtOptions.Audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(int.Parse(jwtSettings["ExpiryInMinutes"])),
+            expires: DateTime.UtcNow.AddMinutes(_jwtOptions.ExpiryInMinutes),
             signingCredentials: creds
         );
 
         return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+    /// <summary>
+    /// return userId from token
+    /// </summary>
+    /// <param name="token"></param>
+    /// <returns></returns>
+    /// <exception cref="NotImplementedException"></exception>
+    public string? ValidateToken(string token)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = Encoding.UTF8.GetBytes(_jwtOptions.Key);
+        try
+        {
+            tokenHandler.ValidateToken(token, new TokenValidationParameters()
+            {
+                ValidateAudience = false,
+                ValidateIssuer = false,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ClockSkew = TimeSpan.Zero,
+
+            }, out SecurityToken secureToken);
+
+            var jwtToken = (JwtSecurityToken)secureToken;
+
+            return jwtToken.Claims.First(c => c.Type == JwtRegisteredClaimNames.Sub).Value;
+
+
+        }
+        catch
+        {
+
+            return null;
+
+        }
+
     }
 }

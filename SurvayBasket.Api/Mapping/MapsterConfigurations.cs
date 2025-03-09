@@ -6,6 +6,6 @@ public class MapsterConfigurations : IRegister
 {
     public void Register(TypeAdapterConfig config)
     {
-        config.NewConfig<Poll, ResponsePoll>().Map(dist => dist.Notes, src => src.Summery);
+        config.NewConfig<Poll, ResponsePoll>().Map(dist => dist.summery, src => src.Summery);
     }
 }

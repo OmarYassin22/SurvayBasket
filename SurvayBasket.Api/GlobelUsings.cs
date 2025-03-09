@@ -13,3 +13,5 @@ global using Microsoft.AspNetCore.Mvc;
 global using Scalar.AspNetCore;
 global using SurvayBasket.Api;
 global using System.Reflection;
+global using Core.Abestraction;
+

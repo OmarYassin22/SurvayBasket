@@ -5,5 +5,7 @@ public record AuthResponse(
     string FirstName,
     string LastName,
     string Token,
-    int expiresIn
+    int expiresIn,
+    string RefreshToken,
+    DateTime RefreshTokenExpiresIn
     );

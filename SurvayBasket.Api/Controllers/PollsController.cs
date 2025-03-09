@@ -1,5 +1,6 @@
 ﻿using Core.Contracts.Poll;
 using Microsoft.AspNetCore.Authorization;
+
 namespace SurvayBasket.Api.Controllers;
 
 [Authorize]
@@ -14,22 +15,22 @@ public class PollsController(IPollService pollService, IMapper mapper) : Control
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
         var polls = await _pollService.GetPollsAsync(cancellationToken);
-        var responsePoll = polls.Adapt<ResponsePoll>();
-
-        return Ok(polls);
+        return polls.IsSuccess
+             ? Ok(polls.Value)
+              : BadRequest(polls.Error);
     }
     [HttpGet("{id}")]
     public async Task<IActionResult> Get(int id, CancellationToken cancellationToken)
     {
-        var poll = await _pollService.GetPollByIdAsync(id, cancellationToken);
-        if (poll == null)
+        var result = await _pollService.GetPollByIdAsync(id, cancellationToken);
+        if (result.IsFailure)
         {
-            return NotFound();
+            return Problem(statusCode: StatusCodes.Status404NotFound, title: result.Error.code, detail: result.Error.description);
         }
         var conf = new TypeAdapterConfig();
-        conf.NewConfig<Poll, ResponsePoll>()
-            .Map(dist => dist.Notes, src => src.Summery);
-        var res = poll.Adapt<ResponsePoll>(conf);
+        //conf.NewConfig<Poll, ResponsePoll>()
+        //    .Map(dist => dist.summery, src => src.Summery);
+        var res = result.Value.Adapt<ResponsePoll>();
         return Ok(res);
 
 
@@ -37,28 +38,38 @@ public class PollsController(IPollService pollService, IMapper mapper) : Control
     [HttpPost()]
     public async Task<IActionResult> CreatePol(CreatePollRequest request, [FromServices] IValidator<CreatePollRequest> validator, CancellationToken cancellationToken)
     {
+        if (validator is null)
+        {
+            throw new ArgumentNullException(nameof(validator));
+        }
 
-        var poll = await _pollService.CreatePoolAsync(request.Adapt<Poll>(), cancellationToken);
-        return CreatedAtAction(nameof(Get), new { id = poll.Id }, poll);
+        var result = await _pollService.CreatePoolAsync(request.Adapt<Poll>(), cancellationToken);
+        return result.IsFailure ?
+            Problem(statusCode: StatusCodes.Status409Conflict, title: result.Error.code, detail: result.Error.description)
+            : CreatedAtAction(nameof(Get), new { id = result.Value.Id }, result.Value.Adapt<ResponsePoll>());
+
 
     }
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, CreatePollRequest request, CancellationToken cancellationToken)
     {
-        return await _pollService.UpdateAsync(id, request.Adapt<Poll>(), cancellationToken) ? NoContent() : NotFound();
+        var result = await _pollService.UpdateAsync(id, request.Adapt<Poll>(), cancellationToken);
+
+        return result.IsSuccess ? NoContent() : Problem(statusCode: StatusCodes.Status409Conflict, title: result.Error.code, detail: result.Error.description);
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+    public async Task<IActionResult> Delete([FromRoute] int id, CancellationToken cancellationToken)
     {
-        return await _pollService.DeleteAsync(id, cancellationToken) ? NoContent() : NotFound();
+        var result = await _pollService.DeleteAsync(id, cancellationToken);
+        return result.IsSuccess ? NoContent() : Problem(statusCode: StatusCodes.Status404NotFound, title: result.Error.code, detail: result.Error.description);
     }
 
     [HttpPost("{id}/toggle")]
     public async Task<IActionResult> TogglePublish(int id, CancellationToken cancellationToken)
     {
         var poll = await _pollService.TogglePublishAsync(id, cancellationToken);
-        return poll == null ? NotFound() : Ok(poll);
+        return poll == null ? Problem(statusCode: StatusCodes.Status404NotFound, title: poll?.Error.code, detail: poll?.Error.description) : Ok(poll.Value);
     }
     [HttpPost("test")]
     public IActionResult Test([FromBody] Student student)

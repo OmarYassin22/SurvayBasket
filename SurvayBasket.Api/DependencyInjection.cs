@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using SurvayBasket.Api.Options;
 using SurveyBasket.Api.Services.Auth;
 using System.Text;
 
@@ -26,6 +27,13 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddAuthConfig(configuration);
 
+        // options pattern
+        services.Configure<JwtOptions>(configuration.GetSection("Jwt"));
+
+        services.AddExceptionHandler<GlobalExceptionHandler>();
+        services.AddProblemDetails();
+
+
         return services;
     }
 
@@ -48,9 +56,11 @@ public static class DependencyInjection
     public static IServiceCollection AddAuthConfig(this IServiceCollection services, IConfiguration configuration)
     {
         var jwtSettings = configuration.GetSection("Jwt");
+        var jwtOptions = configuration.GetSection("Jwt").Get<JwtOptions>();
 
         services
             .AddIdentity<ApplicationUser, IdentityRole>()
+            .AddApiEndpoints()
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();
 
@@ -72,9 +82,9 @@ public static class DependencyInjection
                 ValidateIssuer = true,
                 ValidateAudience = true,
                 ValidateLifetime = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"])),
-                ValidIssuer = jwtSettings["Issuer"],
-                ValidAudience = jwtSettings["Audience"]
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions?.Key!)),
+                ValidIssuer = jwtOptions?.Issuer,
+                ValidAudience = jwtOptions?.Audience
             };
         });
 
