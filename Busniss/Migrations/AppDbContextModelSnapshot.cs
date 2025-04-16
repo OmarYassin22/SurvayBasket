@@ -48,7 +48,7 @@ namespace Busniss.Migrations
                     b.HasIndex("Content", "QuestionId")
                         .IsUnique();
 
-                    b.ToTable("Answer");
+                    b.ToTable("Answer", (string)null);
                 });
 
             modelBuilder.Entity("Core.Entities.ApplicationUser", b =>
@@ -169,7 +169,7 @@ namespace Busniss.Migrations
                     b.HasIndex("Content", "PollId")
                         .IsUnique();
 
-                    b.ToTable("Question");
+                    b.ToTable("Question", (string)null);
                 });
 
             modelBuilder.Entity("Core.Models.Poll", b =>
@@ -219,7 +219,7 @@ namespace Busniss.Migrations
 
                     b.HasIndex("UpdatedById");
 
-                    b.ToTable("Polls");
+                    b.ToTable("Polls", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

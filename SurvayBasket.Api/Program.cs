@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,11 +7,36 @@ var builder = WebApplication.CreateBuilder(args);
 // Register the AppDbContext with the dependency injection container
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+#region Serilog
+#region define level in same file
 
+//builder.Host.UseSerilog((contect, configuration) =>
+//{
+//    configuration
+//        .MinimumLevel.Information()
+//        .WriteTo.Console();
+
+//});
+#endregion
+#region read from app.settings 
+builder.Host.UseSerilog(
+    (context, configuration)
+        => configuration.ReadFrom.Configuration(context.Configuration));
+
+#endregion
+#endregion
 
 builder.Services.IOCServices(builder.Configuration);
-var app = builder.Build();
+builder.Services.AddOutputCache(opt =>
+{
+    opt.AddPolicy("pollCach", x =>
+    {
 
+        x.Cache().Expire(TimeSpan.FromSeconds(120));
+    });
+});
+var app = builder.Build();
+app.UseSerilogRequestLogging();
 #region middleware
 //var logger = app.Services.GetRequiredService<ILogger<Program>>();
 //app.Use(async (context, next) => 
@@ -33,8 +59,11 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
+app.UseCors();
 app.UseAuthentication(); // Required for authentication
 app.UseAuthorization();
+app.UseResponseCaching();
+
 app.MapIdentityApi<ApplicationUser>();
 app.Use(async (context, next) =>
 {

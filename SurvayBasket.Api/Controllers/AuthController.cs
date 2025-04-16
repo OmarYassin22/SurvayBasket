@@ -3,14 +3,16 @@
 namespace SurvayBasket.Api.Controllers;
 [Route("[controller]")]
 [ApiController]
-public class AuthController(IAuthService authService, UserManager<ApplicationUser> userManager) : ControllerBase
+public class AuthController(IAuthService authService, UserManager<ApplicationUser> userManager, ILogger<AuthController> logger) : ControllerBase
 {
     private readonly IAuthService _authService = authService;
     private readonly UserManager<ApplicationUser> _userManager = userManager;
+    private readonly ILogger<AuthController> _logger = logger;
 
     [HttpPost("")]
     public async Task<IActionResult> GetToken([FromBody] LoginRequest request, CancellationToken cancellationToken)
     {
+        _logger.LogInformation("Welcom From Auth Controller");
         var authResult = await _authService.GetTokenAsync(request.Email, request.Password, cancellationToken);
 
         return authResult.Match<IActionResult>(

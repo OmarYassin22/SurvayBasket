@@ -1,7 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using System.Reflection;
-using System.Security.Claims;
 
 namespace Busniss.Persistence;
 public class AppDbContext(DbContextOptions options, IHttpContextAccessor httpContextAccessor) : IdentityDbContext<ApplicationUser>(options)
@@ -13,13 +12,14 @@ public class AppDbContext(DbContextOptions options, IHttpContextAccessor httpCon
     public DbSet<Poll> Polls { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
-        var cascadeFKs = modelBuilder.Model
-                                    .GetEntityTypes()
-                                    .SelectMany(t => t.GetForeignKeys())
-                                    .Where(fk => fk.DeleteBehavior == DeleteBehavior.Cascade && !fk.IsOwnership);
-        foreach (var fk in cascadeFKs)
-            fk.DeleteBehavior = DeleteBehavior.Restrict;
+        //modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+
+        //var cascadeFKs = modelBuilder.Model
+        //                            .GetEntityTypes()
+        //                            .SelectMany(t => t.GetForeignKeys())
+        //                            .Where(fk => fk.DeleteBehavior == DeleteBehavior.Cascade && !fk.IsOwnership);
+        //foreach (var fk in cascadeFKs)
+        //{ fk.DeleteBehavior = DeleteBehavior.Restrict; }
 
 
 

@@ -12,6 +12,7 @@ public class PollsController(IPollService pollService, IMapper mapper) : Control
     private readonly IMapper _mapper = mapper;
 
     [HttpGet]
+    [ResponseCache(Duration =60)]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
         var polls = await _pollService.GetPollsAsync(cancellationToken);
