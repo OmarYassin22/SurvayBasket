@@ -12,7 +12,7 @@ public class PollsController(IPollService pollService, IMapper mapper) : Control
     private readonly IMapper _mapper = mapper;
 
     [HttpGet]
-    [ResponseCache(Duration =60)]
+    [ResponseCache(Duration = 60)]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
         var polls = await _pollService.GetPollsAsync(cancellationToken);
@@ -56,7 +56,9 @@ public class PollsController(IPollService pollService, IMapper mapper) : Control
     {
         var result = await _pollService.UpdateAsync(id, request.Adapt<Poll>(), cancellationToken);
 
-        return result.IsSuccess ? NoContent() : Problem(statusCode: StatusCodes.Status409Conflict, title: result.Error.code, detail: result.Error.description);
+        return result.IsSuccess ?
+            NoContent() :
+            Problem(statusCode: StatusCodes.Status409Conflict, title: result.Error.code, detail: result.Error.description);
     }
 
     [HttpDelete("{id}")]
@@ -72,15 +74,11 @@ public class PollsController(IPollService pollService, IMapper mapper) : Control
         var poll = await _pollService.TogglePublishAsync(id, cancellationToken);
         return poll == null ? Problem(statusCode: StatusCodes.Status404NotFound, title: poll?.Error.code, detail: poll?.Error.description) : Ok(poll.Value);
     }
-    [HttpPost("test")]
-    public IActionResult Test([FromBody] Student student)
-    {
+    [HttpGet("avilabe-poll")]
+    public IActionResult GetAvailabePolls(CancellationToken cancellationToken)
+        => Ok(_pollService.GetCurrentAsync(cancellationToken).Result.Value);
 
-        return Ok("Accepted Values");
-    }
-    public class Person
-    {
-        public string Name { get; set; }
-        public int Age { get; set; }
-    }
+
+
+
 }

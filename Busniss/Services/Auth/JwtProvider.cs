@@ -1,10 +1,10 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using SurvayBasket.Api.Options;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace SurveyBasket.Api.Services.Auth;
 public class JwtProvider : IJwtProvider
@@ -44,12 +44,7 @@ public class JwtProvider : IJwtProvider
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
-    /// <summary>
-    /// return userId from token
-    /// </summary>
-    /// <param name="token"></param>
-    /// <returns></returns>
-    /// <exception cref="NotImplementedException"></exception>
+
     public string? ValidateToken(string token)
     {
         var tokenHandler = new JwtSecurityTokenHandler();

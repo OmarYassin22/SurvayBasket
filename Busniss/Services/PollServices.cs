@@ -1,7 +1,9 @@
 ﻿using Busniss.Persistence;
 using Core.Abestraction;
 using Core.Abestraction.Errors;
+using Core.Contracts.Poll;
 using Core.Interfaces;
+using Mapster;
 
 namespace Busniss.Services;
 public class PollServices(AppDbContext context) : IPollService
@@ -9,16 +11,29 @@ public class PollServices(AppDbContext context) : IPollService
     private AppDbContext _context { get; } = context;
 
 
-    public async Task<Result<IEnumerable<Poll?>>> GetPollsAsync(CancellationToken cancellationToken)
+    public async Task<Result<IEnumerable<ResponsePoll?>>> GetPollsAsync(CancellationToken cancellationToken)
     {
 
-        var result = await _context.Polls.AsNoTracking().ToListAsync();
+        var result = await _context.Polls.AsNoTracking().ProjectToType<ResponsePoll>().ToListAsync();
 
         return result is null
-            ? Result<IEnumerable<Poll?>>.Failure(PolLErrors.NotFound)
-            : Result<IEnumerable<Poll?>>.Success(result);
+            ? Result<IEnumerable<ResponsePoll?>>.Failure(PolLErrors.NotFound)
+            : Result<IEnumerable<ResponsePoll?>>.Success(result);
 
     }
+    public async Task<Result<IEnumerable<ResponsePoll>>> GetCurrentAsync(CancellationToken cancellationToken)
+    {
+        var avilablePoll = await _context.Polls
+            .Where(p => p.IsPublished
+            && p.StartsAt <= DateOnly.FromDateTime(DateTime.UtcNow)
+            && p.EndsAt >= DateOnly.FromDateTime(DateTime.UtcNow))
+            .AsNoTracking()
+            .ProjectToType<ResponsePoll>()
+            .ToListAsync();
+
+        return Result<IEnumerable<ResponsePoll>>.Success(avilablePoll);
+    }
+
     public async Task<Result<Poll>> GetPollByIdAsync(int id, CancellationToken cancellationToken)
     {
         var result = await _context.Polls.FirstOrDefaultAsync(p => p.Id == id, cancellationToken);

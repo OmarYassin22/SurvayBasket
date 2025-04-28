@@ -1,9 +1,9 @@
 ﻿using FluentValidation;
 
 namespace Core.Contracts.Question;
-public class QuestionRequestValidator : AbstractValidator<QuestionRequest>
+public class VoteRequestValidator : AbstractValidator<QuestionRequest>
 {
-    public QuestionRequestValidator()
+    public VoteRequestValidator()
     {
         RuleFor(x => x.Content)
             .NotEmpty()

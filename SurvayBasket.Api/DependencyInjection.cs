@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using System.Text;
+using Core.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using SurvayBasket.Api.Options;
 using SurveyBasket.Api.Services.Auth;
-using System.Text;
 
 namespace SurvayBasket.Api;
 
@@ -25,6 +26,8 @@ public static class DependencyInjection
 
         services.AddScoped<IPollService, PollServices>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IQuestionServices, QuestionServices>();
+        services.AddScoped<IVoteService, VoteService>();
         services.AddAuthConfig(configuration);
 
         // options pattern

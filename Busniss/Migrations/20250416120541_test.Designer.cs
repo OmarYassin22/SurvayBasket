@@ -4,6 +4,7 @@ using Busniss.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Busniss.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250416120541_test")]
+    partial class test
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -170,63 +173,6 @@ namespace Busniss.Migrations
                         .IsUnique();
 
                     b.ToTable("Questions");
-                });
-
-            modelBuilder.Entity("Core.Entities.Vote", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("PollId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("SubmittedOn")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("PollId", "UserId")
-                        .IsUnique();
-
-                    b.ToTable("Votes");
-                });
-
-            modelBuilder.Entity("Core.Entities.VoteAnswer", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AnswerId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("QuestionId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("VoteId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AnswerId");
-
-                    b.HasIndex("QuestionId");
-
-                    b.HasIndex("VoteId", "QuestionId")
-                        .IsUnique();
-
-                    b.ToTable("VoteAnswers");
                 });
 
             modelBuilder.Entity("Core.Models.Poll", b =>
@@ -485,52 +431,6 @@ namespace Busniss.Migrations
                     b.Navigation("UpdatedBy");
                 });
 
-            modelBuilder.Entity("Core.Entities.Vote", b =>
-                {
-                    b.HasOne("Core.Models.Poll", "Poll")
-                        .WithMany("Votes")
-                        .HasForeignKey("PollId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Core.Entities.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Poll");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Core.Entities.VoteAnswer", b =>
-                {
-                    b.HasOne("Core.Entities.Answer", "Answer")
-                        .WithMany()
-                        .HasForeignKey("AnswerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Core.Entities.Question", "Question")
-                        .WithMany()
-                        .HasForeignKey("QuestionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Core.Entities.Vote", "Vote")
-                        .WithMany("VoteAnswers")
-                        .HasForeignKey("VoteId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Answer");
-
-                    b.Navigation("Question");
-
-                    b.Navigation("Vote");
-                });
-
             modelBuilder.Entity("Core.Models.Poll", b =>
                 {
                     b.HasOne("Core.Entities.ApplicationUser", "CreatedBy")
@@ -604,16 +504,9 @@ namespace Busniss.Migrations
                     b.Navigation("Answers");
                 });
 
-            modelBuilder.Entity("Core.Entities.Vote", b =>
-                {
-                    b.Navigation("VoteAnswers");
-                });
-
             modelBuilder.Entity("Core.Models.Poll", b =>
                 {
                     b.Navigation("Questions");
-
-                    b.Navigation("Votes");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,6 +1,7 @@
-﻿using System.Security.Claims;
+﻿using System.Reflection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using SurvayBasket.Api.Extions;
 
 namespace Busniss.Persistence;
 public class AppDbContext(DbContextOptions options, IHttpContextAccessor httpContextAccessor) : IdentityDbContext<ApplicationUser>(options)
@@ -10,16 +11,20 @@ public class AppDbContext(DbContextOptions options, IHttpContextAccessor httpCon
     #region Poll Servay
 
     public DbSet<Poll> Polls { get; set; }
+    public DbSet<Question> Questions { get; set; }
+    public DbSet<Answer> Answers { get; set; }
+    public DbSet<Vote> Votes { get; set; }
+    public DbSet<VoteAnswer> VoteAnswers { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        //modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+        modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
 
-        //var cascadeFKs = modelBuilder.Model
-        //                            .GetEntityTypes()
-        //                            .SelectMany(t => t.GetForeignKeys())
-        //                            .Where(fk => fk.DeleteBehavior == DeleteBehavior.Cascade && !fk.IsOwnership);
-        //foreach (var fk in cascadeFKs)
-        //{ fk.DeleteBehavior = DeleteBehavior.Restrict; }
+        var cascadeFKs = modelBuilder.Model
+                                    .GetEntityTypes()
+                                    .SelectMany(t => t.GetForeignKeys())
+                                    .Where(fk => fk.DeleteBehavior == DeleteBehavior.Cascade && !fk.IsOwnership);
+        foreach (var fk in cascadeFKs)
+        { fk.DeleteBehavior = DeleteBehavior.Restrict; }
 
 
 
@@ -31,7 +36,7 @@ public class AppDbContext(DbContextOptions options, IHttpContextAccessor httpCon
         var entries = ChangeTracker.Entries<AuditableEntity>();
         foreach (var entity in entries)
         {
-            var currentUserId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var currentUserId = _httpContextAccessor.HttpContext?.User.GetuserId()!;
             if (entity.State == EntityState.Added)
             {
                 entity.Property(e => e.CreatedById).CurrentValue = currentUserId;
